@@ -37,7 +37,7 @@ public:
 	void sendCommand(uint8_t aHouse, uint8_t aCom);
 	void sendCommand(uint8_t aHouse, uint8_t aNumber, uint8_t aCommand);
 
-//	int spaceAvailable();
+	int freeSpace();
 
 
 
