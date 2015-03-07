@@ -8,6 +8,7 @@
 #ifndef POWERLINE_H
 #define POWERLINE_H
 #include"Arduino.h"
+#include"PowerLineConstants.h"
 
 
 /*   This is just a simple wrapper class around the functions in
@@ -34,6 +35,7 @@ public:
 	void init(uint8_t aOutPin);
 
 	void sendCommand(uint8_t aHouse, uint8_t aCom);
+	void sendCommand(uint8_t aHouse, uint8_t aNumber, uint8_t aCommand);
 
 //	int spaceAvailable();
 

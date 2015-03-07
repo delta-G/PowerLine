@@ -126,7 +126,17 @@ void zeroCrossingISR() {
 			bitCounter = 0;
 			if (!repeated) {
 				zciState = 1;  // send us back around with same command
-			} else {
+			} else if (commandCode & (1 << 7)) {  // This little addition lets us hide on and off with a command code to save a space in the buffer
+
+				if(commandCode & (1 << 6)) {
+					commandCode = 0b00111;   // turn-off
+				} else {
+					commandCode = 0b00101;  // turn-on
+				}
+				zciState = 1;  // go around again with the new command
+			}
+
+			else {
 				if (txBuffer.head == txBuffer.tail) {
 					//  Buffer is Empty
 					detachInterrupt(0);
@@ -138,7 +148,6 @@ void zeroCrossingISR() {
 		}
 		break;
 	}
-
 	}  // end switch (zciState)
 }
 
@@ -200,13 +209,11 @@ ISR(TIMER1_COMPB_vect) {
 	PowerLineControl::compbISR();
 }
 
-
-PowerLineClass::PowerLineClass(){
+PowerLineClass::PowerLineClass() {
 
 }
 
-
-void PowerLineClass::init(uint8_t aOutPin){
+void PowerLineClass::init(uint8_t aOutPin) {
 
 	PowerLineControl::initPLC(aOutPin);
 
@@ -217,11 +224,22 @@ void PowerLineClass::init(uint8_t aOutPin){
 //	return BUF_SIZE;
 //}
 
-
-void PowerLineClass::sendCommand(uint8_t aHouseCode , uint8_t aComCode){
+void PowerLineClass::sendCommand(uint8_t aHouseCode, uint8_t aComCode) {
 	PowerLineControl::addCommand(aHouseCode, aComCode);
 }
 
 
-
+void PowerLineClass::sendCommand(uint8_t aHouse, uint8_t aNumber, uint8_t aCommmand){
+	uint8_t newCom = aNumber;
+	if(aCommand == TURN_ON){
+		newCom |= 0b10100000;
+		sendCommand(aHouse, newCom);
+	} else if(aCommand == TURN_OFF){
+		newCom |= 0b11100000;
+		sendCommand(aHouse, newCom);
+	} else {
+		sendCommand(aHouse, aNumber);
+		sendCommand(aHouse, aCommand);
+	}
+}
 
