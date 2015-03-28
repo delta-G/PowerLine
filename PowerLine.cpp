@@ -229,7 +229,7 @@ void PowerLineClass::sendCommand(uint8_t aHouseCode, uint8_t aComCode) {
 }
 
 
-void PowerLineClass::sendCommand(uint8_t aHouse, uint8_t aNumber, uint8_t aCommmand){
+void PowerLineClass::sendCommand(uint8_t aHouse, uint8_t aNumber, uint8_t aCommand){
 
 	// If the command is turn_on or turn_off, then we can hide it in the
 	//    three bits of commandCode that we aren't using.
@@ -237,10 +237,10 @@ void PowerLineClass::sendCommand(uint8_t aHouse, uint8_t aNumber, uint8_t aCommm
 	//    for this and to act accordingly.
 
 	uint8_t newCom = aNumber;
-	if(aCommand == TURN_ON){
+	if(aCommand == UNIT_ON){
 		newCom |= 0b10100000;
 		sendCommand(aHouse, newCom);
-	} else if(aCommand == TURN_OFF){
+	} else if(aCommand == UNIT_OFF){
 		newCom |= 0b11100000;
 		sendCommand(aHouse, newCom);
 	} else {
@@ -252,7 +252,7 @@ void PowerLineClass::sendCommand(uint8_t aHouse, uint8_t aNumber, uint8_t aCommm
 
 int PowerLineClass::freeSpace() {
 
-	int retval = PowerLineControl::buffer.head - PowerLineControl::buffer.tail;
+	int retval = PowerLineControl::txBuffer.head - PowerLineControl::txBuffer.tail;
 
 	if (retval < 0 ){   // way faster than using an add and modulo.
 		retval += BUF_SIZE;

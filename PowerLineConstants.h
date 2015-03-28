@@ -1,5 +1,7 @@
 
 
+
+
 #define	HOUSE_A	0b0110
 #define	HOUSE_B	0b1110
 #define	HOUSE_C	0b0010
@@ -34,8 +36,8 @@
 #define UNIT_15	0b01000
 #define UNIT_16	0b11000
 
-#define TURN_ON   0b00101
-#define TURN_OFF  0b00111
+#define UNIT_ON   0b00101
+#define UNIT_OFF  0b00111
 
 #define ALL_UNITS_OFF	0b00001
 #define ALL_LIGHTS_ON	0b00011
