@@ -30,6 +30,7 @@ uint8_t outputPinMask;
 volatile boolean transmitting = false;
 
 void addCommand(uint8_t aHouse, uint8_t aCom) {
+	cli();
 	unsigned int i = (unsigned int) (txBuffer.head + 1) % BUF_SIZE;
 
 	if (i != txBuffer.tail) {
@@ -38,9 +39,11 @@ void addCommand(uint8_t aHouse, uint8_t aCom) {
 		txBuffer.head = i;
 	}
 	if (!transmitting) {  // If the interrupt isn't running, turn it on.
-		EIFR |= 1;  // Clear any pending interrupt
+		EIFR |= (1 << INTF0);  // Clear any pending interrupt
 		attachInterrupt(0, zeroCrossingISR, CHANGE);
+		transmitting = true;
 	}
+	sei();
 }
 
 void zeroCrossingISR() {
@@ -48,8 +51,8 @@ void zeroCrossingISR() {
 	static uint8_t bitCounter = 0;
 	static boolean parityBit = false;
 	static uint8_t zciState = 0;
-	static uint8_t houseCode;
-	static uint8_t commandCode;
+	static uint8_t houseCode = 0;
+	static uint8_t commandCode = 0;
 
 	switch (zciState) {
 
@@ -59,8 +62,10 @@ void zeroCrossingISR() {
 		txBuffer.tail = (txBuffer.tail + 1) % BUF_SIZE;
 		houseCode = newcom >> 8;
 		commandCode = newcom & 0xFF;
+		bitCounter = 0;
 		zciState++;
 		// Fall through and run case 1 to start transmitting
+
 	}
 		/* no break */
 	case 1: {
@@ -142,7 +147,7 @@ void zeroCrossingISR() {
 					detachInterrupt(0);
 					transmitting = false;
 				}
-				zciState = 0;
+				zciState = 0;  // More in buffer, get new command next time
 			}
 			repeated = !repeated;
 		}
@@ -172,6 +177,7 @@ void initPLC(uint8_t aOutpin) {
 }
 
 void sendBit(uint8_t aBit) {
+	cli();
 	if (aBit) {
 		TCNT1 = 0;  // reset the counter
 		*outputPinPort |= outputPinMask;  // Start with pin on for a 1
@@ -180,14 +186,18 @@ void sendBit(uint8_t aBit) {
 	} else {
 		*outputPinPort &= ~outputPinMask;  // Start with pin off for a 0
 		TIMSK1 &= ~((1 << OCIE1A) | (1 << OCIE1B)); // Turn off the interrupt.  (should aleady be off)
+		// For a zero you don't need the Timer1 interrupt, just wait until the next zero cross.
 	}
+	sei();
 }
 
 inline void compaISR() {
+	// At the top we just turn the pin back on
 	*outputPinPort |= outputPinMask;
 }
 
 inline void compbISR() {
+	// Turn the pin off.  If this was the third beat then we stop the interrupts.
 	static uint8_t ovfCount = 0;
 	*outputPinPort &= ~outputPinMask;  // Turn pin off
 	if (ovfCount >= 2) {  //We've done this twice before
@@ -219,10 +229,6 @@ void PowerLineClass::init(uint8_t aOutPin) {
 
 }
 
-//  **TODO  fix this function
-//int PowerLineClass::spaceAvailable(){
-//	return BUF_SIZE;
-//}
 
 void PowerLineClass::sendCommand(uint8_t aHouseCode, uint8_t aComCode) {
 	PowerLineControl::addCommand(aHouseCode, aComCode);
