@@ -40,11 +40,11 @@ void loop() {
 		previousMillis = currentMillis;
 
 		if (lampOn) {
-			PowerLine.sendCommand(0b1110, 0b10100);  // House B unit 04
-			PowerLine.sendCommand(0b1110, 0b00101);  // House B ON
+			PowerLine.sendCommand(HOUSE_B, UNIT_4);  // House B unit 04
+			PowerLine.sendCommand(HOUSE_B, UNIT_ON);  // House B ON
 		} else {
-			PowerLine.sendCommand(0b1110, 0b10100);  // House B unit 04
-			PowerLine.sendCommand(0b1110, 0b00111);  // House B OFF
+			PowerLine.sendCommand(HOUSE_B, UNIT_4);  // House B unit 04
+			PowerLine.sendCommand(HOUSE_B, UNIT_OFF);  // House B OFF
 		}
 	}
 	heartBeat();
