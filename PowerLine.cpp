@@ -258,7 +258,7 @@ void PowerLineClass::sendCommand(uint8_t aHouse, uint8_t aNumber, uint8_t aComma
 
 int PowerLineClass::freeSpace() {
 
-	int retval = PowerLineControl::txBuffer.head - PowerLineControl::txBuffer.tail;
+	int retval = PowerLineControl::txBuffer.tail - PowerLineControl::txBuffer.head;
 
 	if (retval < 0 ){   // way faster than using an add and modulo.
 		retval += BUF_SIZE;
