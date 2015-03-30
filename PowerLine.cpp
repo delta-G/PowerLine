@@ -21,7 +21,7 @@ namespace PowerLineControl {
 
 ring_buffer txBuffer = { { 0 }, 0, 0 };
 
-uint8_t outputPin = 7;
+uint8_t outputPin;
 uint8_t zeroXingPin = 2;
 
 volatile uint8_t *outputPinPort;
@@ -201,7 +201,6 @@ inline void compbISR() {
 	static uint8_t ovfCount = 0;
 	*outputPinPort &= ~outputPinMask;  // Turn pin off
 	if (ovfCount >= 2) {  //We've done this twice before
-		//TCCR1A &= ~(1 << COM2B1);  // Turn off the PWM
 		TIMSK1 &= ~((1 << OCIE1A) | (1 << OCIE1B));  // Turn off the interrupts.
 		ovfCount = 0;
 	} else {
@@ -231,6 +230,7 @@ void PowerLineClass::init(uint8_t aOutPin) {
 
 
 void PowerLineClass::sendCommand(uint8_t aHouseCode, uint8_t aComCode) {
+	while(freeSpace() <= 0);  // Block if there's no room in the buffer
 	PowerLineControl::addCommand(aHouseCode, aComCode);
 }
 
@@ -239,8 +239,6 @@ void PowerLineClass::sendCommand(uint8_t aHouse, uint8_t aNumber, uint8_t aComma
 
 	// If the command is turn_on or turn_off, then we can hide it in the
 	//    three bits of commandCode that we aren't using.
-	//    I wrote the code that fetches the next command to check
-	//    for this and to act accordingly.
 
 	uint8_t newCom = aNumber;
 	if(aCommand == UNIT_ON){
@@ -258,7 +256,7 @@ void PowerLineClass::sendCommand(uint8_t aHouse, uint8_t aNumber, uint8_t aComma
 
 int PowerLineClass::freeSpace() {
 
-	int retval = PowerLineControl::txBuffer.tail - PowerLineControl::txBuffer.head;
+	int retval = PowerLineControl::txBuffer.tail - PowerLineControl::txBuffer.head - 1;
 
 	if (retval < 0 ){   // way faster than using an add and modulo.
 		retval += BUF_SIZE;
